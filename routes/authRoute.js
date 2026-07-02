@@ -22,7 +22,7 @@ router.get(
   (req, res) => {
     // req.user is set by passport after successful login
     const token = jwt.sign(
-      { id: req.user.id, email: req.user.email },
+      { id: req.user.id, email: req.user.email, role: req.user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -35,10 +35,10 @@ router.get(
         name: req.user.name,
         email: req.user.email,
         provider: req.user.provider,
+        role: req.user.role,
       },
     });
   }
 );
 
 module.exports = router;
-

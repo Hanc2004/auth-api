@@ -66,7 +66,7 @@ const login = async (req, res) => {
 
     // 4. Create JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -79,6 +79,7 @@ const login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
 
@@ -92,7 +93,7 @@ const getProfile = async (req, res) => {
   try {
     // req.user was attached by our middleware!
     const result = await pool.query(
-      'SELECT id, name, email, provider, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, provider, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
