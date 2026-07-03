@@ -71,4 +71,6 @@ jobs:
           DB_NAME: authdb_test
           JWT_SECRET: test_jwt_secret_for_ci
           SESSION_SECRET: test_session_secret
+          GOOGLE_CLIENT_ID: placeholder
+          GOOGLE_CLIENT_SECRET: placeholder
         run: npm test
