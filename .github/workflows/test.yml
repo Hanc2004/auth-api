@@ -1,0 +1,74 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: authdb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create tables
+        env:
+          PGPASSWORD: testpassword
+        run: |
+          psql -h localhost -U postgres -d authdb_test -c "
+            CREATE TABLE IF NOT EXISTS users (
+              id SERIAL PRIMARY KEY,
+              name VARCHAR(100),
+              email VARCHAR(100) UNIQUE NOT NULL,
+              password VARCHAR(255),
+              provider VARCHAR(50) DEFAULT 'local',
+              role VARCHAR(20) DEFAULT 'user' NOT NULL,
+              created_at TIMESTAMP DEFAULT NOW()
+            );
+            CREATE TABLE IF NOT EXISTS tasks (
+              id SERIAL PRIMARY KEY,
+              title VARCHAR(200) NOT NULL,
+              description TEXT,
+              status VARCHAR(20) DEFAULT 'pending',
+              user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+              created_at TIMESTAMP DEFAULT NOW(),
+              updated_at TIMESTAMP DEFAULT NOW()
+            );
+          "
+
+      - name: Run tests
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: testpassword
+          DB_NAME: authdb_test
+          JWT_SECRET: test_jwt_secret_for_ci
+          SESSION_SECRET: test_session_secret
+        run: npm test
