@@ -1,79 +1,86 @@
 # Auth API
 
-A secure authentication REST API built with Node.js, Express, and PostgreSQL — featuring JWT authentication, Google OAuth 2.0, and full Docker containerization.
+A secure REST API for user authentication and task management, built with Node.js, Express, and PostgreSQL.
+
+## Live Demo
+API Base URL: `https://auth-api-2zd0.onrender.com`
 
 ## Features
-
-- User registration with bcrypt password hashing
-- Login with JWT token generation
-- Protected routes secured by custom JWT middleware
+- User registration and login with bcrypt password hashing
+- JWT-based authentication with role support (admin / user)
 - Google OAuth 2.0 login via Passport.js
-- PostgreSQL database with parameterized queries (SQL injection safe)
-- Fully Dockerized with Docker Compose (app + database)
+- Full task CRUD — create, read, update, delete
+- Role-based access control — admins manage all tasks, users manage their own
+- 13 automated unit tests with Jest and Supertest
+- CI/CD via GitHub Actions — tests run on every push to main
+- Dockerised for consistent local development
 
 ## Tech Stack
+- **Runtime:** Node.js
+- **Framework:** Express.js
+- **Database:** PostgreSQL (raw pg queries)
+- **Auth:** JWT, bcrypt, Passport.js, Google OAuth 2.0
+- **Testing:** Jest, Supertest
+- **CI/CD:** GitHub Actions
+- **Deployment:** Render
 
-- **Backend:** Node.js, Express
-- **Database:** PostgreSQL
-- **Auth:** JWT, bcrypt, Passport.js (Google OAuth 2.0)
-- **DevOps:** Docker, Docker Compose
+## Project Structure.
 
 ## API Endpoints
 
-| Method | Endpoint                  | Description                  | Auth Required |
-|--------|----------------------------|-------------------------------|----------------|
-| POST   | `/api/auth/register`       | Register a new user           | No             |
-| POST   | `/api/auth/login`          | Login and receive a JWT token | No             |
-| GET    | `/api/auth/profile`        | Get logged-in user's profile  | Yes (Bearer)   |
-| GET    | `/api/auth/google`         | Start Google OAuth login      | No             |
-| GET    | `/api/auth/google/callback`| Google OAuth callback         | No             |
+### Auth
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/auth/register` | Public | Register a new user |
+| POST | `/api/auth/login` | Public | Login and receive JWT |
+| GET | `/api/auth/profile` | Protected | Get current user profile |
+| GET | `/api/auth/google` | Public | Google OAuth login |
+
+### Tasks
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/tasks` | Protected | Get tasks (admin: all, user: own) |
+| POST | `/api/tasks` | Protected | Create a task |
+| PUT | `/api/tasks/:id` | Protected | Update a task |
+| DELETE | `/api/tasks/:id` | Protected | Delete a task |
+| GET | `/api/tasks/admin/summary` | Admin only | Task counts per user |
 
 ## Getting Started
 
 ### Prerequisites
+- Node.js 18+
+- PostgreSQL
+- Docker (optional)
 
-- Docker and Docker Compose installed
-
-### Setup
-
-1. Clone the repository
+### Local Setup
 ```bash
-   git clone https://github.com/Hanc2004/auth-api.git
-   cd auth-api
+# Clone the repo
+git clone https://github.com/Hanc2004/auth-api.git
+cd auth-api
+
+# Install dependencies
+npm install
+
+# Create .env file
+cp .env.example .env
+# Fill in your DB credentials and secrets
+
+# Create database tables
+psql -U postgres -d authdb -f schema.sql
+
+# Start the server
+npm run dev
 ```
 
-2. Create a `.env` file in the root directory:
+### Environment Variables
 
-3. Run with Docker Compose
+### Running Tests
 ```bash
-   docker-compose up --build
+npm test
 ```
 
-4. Create the database table (first time only)
-```bash
-   docker exec -it auth-api-db-1 psql -U postgres -d authdb
-```
-   Then run:
-```sql
-   CREATE TABLE users (
-     id        SERIAL PRIMARY KEY,
-     name      VARCHAR(100),
-     email     VARCHAR(150) UNIQUE NOT NULL,
-     password  VARCHAR(255),
-     provider  VARCHAR(20) DEFAULT 'local',
-     created_at TIMESTAMP DEFAULT NOW()
-   );
-```
+## CI/CD
+GitHub Actions runs all 13 tests automatically on every push to `main`. The workflow spins up a PostgreSQL service container, creates the required tables, and runs the full test suite.
 
-5. The API is now running at `http://localhost:5000`
-
-## Security Notes
-
-- Passwords are hashed using bcrypt before storage — never stored in plain text
-- JWT tokens expire after 7 days
-- All database queries use parameterized statements to prevent SQL injection
-- Environment variables keep all secrets out of source control
-
-## Author
-
-Built by [Hellena Aman Nzellu] as part of a hands-on backend development project.
+## Deployment
+The API is deployed on Render with a managed PostgreSQL database. Environment variables are configured via the Render dashboard.
